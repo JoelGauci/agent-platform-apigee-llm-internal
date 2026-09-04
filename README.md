@@ -10,6 +10,8 @@ This repository contains the complete infrastructure scripts, ADK agent implemen
 
 From a network and enterprise architecture perspective, this solution represents the **ideal private connectivity model**: it enables an AI agent deployed on **Vertex AI Agent Runtime** to route its egress traffic through **Agent Gateway** and access an internal **Apigee X** instance in a **completely private manner** (with zero public internet exposure).
 
+![Vertex AI Agent Runtime to Internal Apigee X LLM AI Gateway Architecture](images/architecture-overview.png)
+
 By routing all LLM interactions through an Apigee X **LLM AI Gateway** proxy, enterprise organizations gain access to a comprehensive suite of governance, security, operational resilience, and cost optimization capabilities directly in front of their foundation models:
 
 - **Enforce Token Quotas & API Product Tiers**: Utilize API product tiers and enforce strict token budgets per client application, preventing unexpected cost overruns and enabling internal multi-tenant chargeback.
