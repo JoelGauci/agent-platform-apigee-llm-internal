@@ -1,0 +1,17 @@
+name: agw-apigee-us-central1-ata
+protocols:
+  - MCP
+  - HTTP
+  - HTTPS
+googleManaged:
+  governedAccessPath: AGENT_TO_ANYWHERE
+registries:
+  - "//agentregistry.googleapis.com/projects/agent-platform-exp/locations/us-central1"
+networkConfig:
+  egress:
+    networkAttachment: projects/agent-platform-exp/regions/us-central1/networkAttachments/psc-na-us-central1-agw
+  dnsPeeringConfig:
+    domains:
+      - iloveagents.io.
+    targetProject: agent-platform-exp
+    targetNetwork: projects/agent-platform-exp/global/networks/vnet-apigee

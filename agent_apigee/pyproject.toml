@@ -1,0 +1,13 @@
+[project]
+name = "agent-apigee"
+version = "0.1.0"
+description = "ADK Agent with ApigeeLLM Gateway"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=1.18.0",
+    "google-cloud-aiplatform>=1.70.0",
+    "google-genai",
+    "cloudpickle",
+    "python-dotenv",
+    "requests",
+]

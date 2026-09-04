@@ -1,0 +1,4 @@
+google-adk>=1.18.0
+google-genai
+python-dotenv
+requests

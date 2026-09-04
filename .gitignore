@@ -1,0 +1,32 @@
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary Environment & State files
+cfg/reasoning_engine.env
+agent_apigee/cfg/
+*.env
+*.pkl
+*.tar.gz
+
+# OS-specific files
+.DS_Store
+Thumbs.db
