@@ -23,15 +23,21 @@ export PROJ_NO=$(gcloud projects describe ${PROJ_ID} --format="value(projectNumb
 export ORG_ID=$(gcloud projects get-ancestors ${PROJ_ID} --format="value(id)" 2>/dev/null | tail -n 1 || echo "")
 export USER_IDENTITY=$(gcloud config get-value account 2>/dev/null || echo "")
 
+# Load local .env overrides if present (untracked local config)
+if [ -f "$(dirname "${BASH_SOURCE[0]}")/.env" ]; then
+  # shellcheck source=/dev/null
+  source "$(dirname "${BASH_SOURCE[0]}")/.env"
+fi
+
 export AGW_NAME="agw-${SLUG}-${REGION}-ata"
 export AGW_URI="projects/${PROJ_ID}/locations/${REGION}/agentGateways/${AGW_NAME}"
 export RE_AGENT_NAME="simple-agent"
 export RE_AGENT_ID_SET="principalSet://agents.global.org-${ORG_ID}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJ_NO}"
 export STAGING_BUCKET="agent-staging-${PROJ_NO}"
-export APIGEE_SVC_ATTACHMENT="projects/x45914945fdb2794d-tp/regions/us-central1/serviceAttachments/apigee-us-central1-5ype"
+export APIGEE_SVC_ATTACHMENT="${APIGEE_SVC_ATTACHMENT:-projects/your-apigee-tp/regions/${REGION}/serviceAttachments/apigee-${REGION}-xxxx}"
 
 # Apigee LLM AI Gateway configuration and credentials
 export APIGEE_HOSTNAME="${APIGEE_HOSTNAME:-apigee.iloveagents.io}"
 export APIGEE_LLM="${APIGEE_LLM:-/v1/llm-ai-gateway}"
-export APIGEE_APIKEY="${APIGEE_APIKEY:-${APIKEY:-VcCX3WPLWKmtxbiQ28IVWJAzp88d41g0G1xGoHPZfbvCYLCG}}"
+export APIGEE_APIKEY="${APIGEE_APIKEY:-${APIKEY:-your-apigee-api-key}}"
 export MODEL_NAME="${MODEL_NAME:-apigee/vertex_ai/gemini-2.5-flash}"

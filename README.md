@@ -104,7 +104,7 @@ export AGW_URI="projects/${PROJ_ID}/locations/${REGION}/agentGateways/${AGW_NAME
 export RE_AGENT_NAME="simple-agent"
 export RE_AGENT_ID_SET="principalSet://agents.global.org-${ORG_ID}.system.id.goog/attribute.platformContainer/aiplatform/projects/${PROJ_NO}"
 export STAGING_BUCKET="agent-staging-${PROJ_NO}"
-export APIGEE_SVC_ATTACHMENT="projects/x45914945fdb2794d-tp/regions/us-central1/serviceAttachments/apigee-us-central1-5ype"
+export APIGEE_SVC_ATTACHMENT="projects/your-apigee-tp/regions/${REGION}/serviceAttachments/apigee-${REGION}-xxxx"
 echo ${AGW_NAME}
 echo ${AGW_URI}
 echo ${RE_AGENT_NAME}

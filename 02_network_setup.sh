@@ -181,6 +181,10 @@ echo "INFO: PSC_NA_URI=${PSC_NA_URI}"
 # Create Private Service Connect NEG targeting Apigee X Tenant Service Attachment
 if ! gcloud compute network-endpoint-groups describe neg-apigee-psc --region=${REGION} &>/dev/null; then
   echo "INFO: Creating PSC NEG neg-apigee-psc..."
+  if [[ "${APIGEE_SVC_ATTACHMENT}" == *"your-apigee-tp"* || -z "${APIGEE_SVC_ATTACHMENT}" ]]; then
+    echo "ERROR: APIGEE_SVC_ATTACHMENT is not configured. Please set APIGEE_SVC_ATTACHMENT to your Apigee tenant Service Attachment URI in env.sh or .env"
+    exit 1
+  fi
   gcloud compute network-endpoint-groups create neg-apigee-psc \
     --network-endpoint-type=private-service-connect \
     --psc-target-service=${APIGEE_SVC_ATTACHMENT} \
