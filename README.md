@@ -246,6 +246,18 @@ flowchart LR
     ApigeeProxy --> Gemini
 ```
 
+#### 4. Critical TLS Handshake Requirement: Public CA Certificate & Public Domain Ownership
+
+For the complete end-to-end communication chain to operate securely, all egress requests originating from the **Vertex AI Agent Runtime** container targeting the internal Apigee X hostname (`https://apigee.iloveagents.io/...`) must traverse the PSC interface, reach the ILB, and complete a valid TLS handshake.
+
+> [!IMPORTANT]
+> **TLS Handshake & Trusted Certificate Authority (CA) Requirement**
+> For the TLS handshake between the Vertex AI Agent Runtime container and the Internal Load Balancer (ILB) to succeed, the certificate presented by the ILB **must be issued by a trusted Certificate Authority (CA)**.
+>
+> - **System CA Trust Store Enforcement**: Workloads running on Vertex AI Agent Runtime operate in managed container runtimes where standard client runtimes (e.g., Python `urllib3`, `requests`, `httpx`, gRPC) strictly validate server certificates against official public root CAs (such as the Mozilla CA bundle).
+> - **Failure of Self-Signed Certificates**: If the ILB presents a self-signed certificate, the agent container's TLS client will immediately terminate the handshake with a certificate verification failure (`ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain`).
+> - **Public Domain Ownership Requirement**: To issue a trusted certificate via Google Certificate Manager, Google requires domain control validation via DNS authorization (ACME CNAME challenge). **This requires you to own a public DNS domain to provision a Google-managed certificate**. You must have administrative access to configure a DNS authorization CNAME record in your public DNS zone (such as `iloveagents.io`) to validate domain ownership.
+
 ### 1. Create VPC Networks and Subnets
 
 ```bash
@@ -332,6 +344,13 @@ echo ${PSC_NA_URI}
 
 ### 4. Create Regional Internal Application Load Balancer (ILB) Components in Producer VPC
 
+> [!IMPORTANT]
+> **TLS Handshake & Public Certificate Authority (CA) Requirement**
+> For the TLS handshake between the Vertex AI Agent Runtime container and the Internal Load Balancer (ILB) to succeed, the certificate presented by the ILB **must be issued by a trusted Certificate Authority (CA)**. A self-signed certificate will be rejected by the agent container with `ssl.SSLCertVerificationError`.
+> 
+> **This requires you to own a public DNS domain to provision a Google-managed certificate.**
+> The commands below configure Google Certificate Manager DNS authorization (`auth-apigee-iloveagents`) to verify domain control via an ACME CNAME record in your public Cloud DNS zone (`pub-zone-iloveagents`) before provisioning the Google-managed certificate.
+
 ```bash
 # create psc neg targeting apigee x service attachment in producer vpc
 gcloud compute network-endpoint-groups create neg-apigee-psc \
@@ -353,6 +372,7 @@ gcloud compute backend-services add-backend backend-apigee-ilb \
   --region=${REGION}
 
 # create certificate manager dns authorization for domain ownership verification
+# NOTE: This requires you to own a public DNS domain to provision a Google-managed certificate
 gcloud certificate-manager dns-authorizations create auth-apigee-iloveagents \
   --domain="apigee.iloveagents.io" \
   --location=${REGION}

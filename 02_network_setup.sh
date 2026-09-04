@@ -209,6 +209,9 @@ else
 fi
 
 # Create Certificate Manager DNS Authorization for Domain Ownership Verification
+# NOTE: For the TLS handshake between the Vertex AI Agent Runtime container and the ILB
+# to succeed, the certificate presented by the ILB must be issued by a trusted Certificate Authority (CA).
+# This requires you to own a public DNS domain to provision a Google-managed certificate.
 if ! gcloud certificate-manager dns-authorizations describe auth-apigee-iloveagents --location=${REGION} &>/dev/null; then
   echo "INFO: Creating Certificate Manager DNS authorization auth-apigee-iloveagents..."
   gcloud certificate-manager dns-authorizations create auth-apigee-iloveagents \
