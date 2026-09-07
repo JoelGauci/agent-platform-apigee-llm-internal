@@ -212,40 +212,73 @@ To strictly adhere to this constraint while providing an end-to-end private path
    - **PSC Network Endpoint Group (NEG):** `neg-apigee-psc` forwarding traffic from the ILB backend service directly into Apigee X's tenant service attachment.
 
 ```mermaid
-flowchart LR
-    subgraph GoogleTenant["Google Managed Tenant Projects"]
-        Runtime["Vertex AI Agent Runtime<br/>(Pod SPIFFE Identity)"]
-        AGW["Agent Gateway Instance<br/>(agw-apigee-us-central1-ata)"]
+flowchart TD
+    %% ==========================================
+    %% Google Brand Colors & Global Styling
+    %% ==========================================
+    classDef client fill:#E8F0FE,stroke:#4285F4,stroke-width:2px,color:#1967D2,font-weight:bold;
+    classDef process fill:#FFFFFF,stroke:#5F6368,stroke-width:1.2px,color:#202124;
+    classDef decision fill:#FEF7E0,stroke:#F9AB00,stroke-width:1.5px,color:#B06000,font-weight:bold;
+    classDef primary fill:#E6F4EA,stroke:#34A853,stroke-width:2px,color:#137333,font-weight:bold;
+    classDef fallback fill:#FFF0F0,stroke:#EA4335,stroke-width:1.5px,color:#C5221F,font-weight:bold;
+    classDef secondary fill:#F1F3F4,stroke:#5F6368,stroke-width:1.5px,color:#3C4043;
+
+    subgraph GoogleTenant["Google-Managed Tenant VPC"]
+        subgraph GEAgentRuntime["Gemini Entreprise (GE) Agent Runtime"]
+            Agent["🤖 ADK Simple Agent<br/>(ApigeeLlm Wrapper)"]
+        end
+        PSCI["PSC Interface (PSC-I)"]
+        Agent --> PSCI
     end
 
-    subgraph ConsumerVPC["Consumer VPC (vnet-apigee)"]
-        NA["PSC Network Attachment<br/>(psc-na-us-central1-agw)"]
-        DNS["Private Cloud DNS<br/>apigee.iloveagents.io -> 192.168.10.4"]
-        EP["PSC Consumer Endpoint<br/>(psc2apigeex @ 192.168.10.4)"]
+    subgraph ConsumerVPC["Customer Consumer VPC (vnet-apigee)"]
+        NA["Network Attachment<br/>(psc-na-us-central1-agw)"]
+        DNS["Cloud DNS Private Zone<br/>iloveagents.io.<br/>(Peered with GE Tenant)"]
+        PSCEP["PSC Consumer Endpoint<br/>(psc2apigeex @ ip-psc2apigeex)"]
+
+        PSCI -->|"Private Tunnel"| NA
+        NA -.->|"Queries Private DNS"| DNS
+        DNS -.->|"apigee.iloveagents.io<br/>resolves to ip-psc2apigeex"| NA
+        NA -->|"Internal Forwarding"| PSCEP
     end
 
-    subgraph ProducerVPC["Producer VPC (vnet-apigee-producer)"]
+    subgraph ProducerVPC["Customer Producer VPC (vnet-apigee-producer)"]
         SA["PSC Service Attachment<br/>(sa-apigee-ilb + NAT Subnet)"]
-        ILB["Internal Application LB<br/>(forwarding-rule-apigee-ilb @ 10.20.0.5)"]
-        NEG["PSC NEG Backend<br/>(neg-apigee-psc)"]
+        ILB["Regional Internal ALB<br/>apigee.iloveagents.io<br/>(Forwarding Rule @ ip-ilb-apigee)"]
+        NEG["PSC Network Endpoint Group<br/>(neg-apigee-psc)"]
+
+        PSCEP -->|"PSC Boundary Cross"| SA
+        SA --> ILB
+        ILB --> NEG
     end
 
     subgraph ApigeeTenant["Apigee X Tenant Project"]
         ApigeeSA["Apigee Service Attachment"]
-        ApigeeProxy["Apigee LLM Proxy<br/>(llm-ai-gateway-v1)"]
-        Gemini["Vertex AI Gemini Model"]
+        Apigee["🛡️ Apigee X Runtime<br/>(LLM AI Gateway & MCP Gateway)"]
+
+        NEG -->|"PSC Ingestion"| ApigeeSA
+        ApigeeSA --> Apigee
     end
 
-    Runtime -->|pscInterfaceConfig| AGW
-    AGW -->|Egress| NA
-    NA --> DNS
-    DNS --> EP
-    EP -->|PSC Cross-VPC Boundary| SA
-    SA --> ILB
-    ILB --> NEG
-    NEG -->|PSC Boundary| ApigeeSA
-    ApigeeSA --> ApigeeProxy
-    ApigeeProxy --> Gemini
+    subgraph Backends["Backend Services & Foundation Models"]
+        GEMulti["🧠 Gemini Entreprise (GE)<br/>(Gemini 2.5 Flash / Pro)"]
+        InternalDB["🗄️ Core Enterprise Systems<br/>(Cloud SQL, ERP, MCP Tools)"]
+
+        Apigee -->|"Governed Egress"| GEMulti
+        Apigee -->|"MCP Tool Calling"| InternalDB
+    end
+
+    subgraph PublicDNSZone["Public DNS (Certificate Validation Only)"]
+        PubDNS["Public Cloud DNS Zone<br/>(iloveagents.io.)<br/>ACME CNAME Challenge"]
+    end
+
+    PubDNS -.->|"ACME Domain Verification"| ILB
+
+    class Agent,GEMulti client;
+    class ILB,Apigee primary;
+    class DNS,PubDNS decision;
+    class PSCI,NA,SA,NEG,ApigeeSA secondary;
+    class PSCEP,InternalDB process;
 ```
 
 #### 4. Critical TLS Handshake Requirement: Public CA Certificate & Public Domain Ownership
